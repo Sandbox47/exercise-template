@@ -1,0 +1,34 @@
+
+% Überschreibt enumerate Befehl, sodass 1. Ebene Items mit
+\renewcommand{\theenumi}{(\alph{enumi})}
+% (a), (b), etc. nummeriert werden.
+\renewcommand{\labelenumi}{\text{\theenumi}}
+
+% \setcounter{countername}{number}: Legt den Wert des Counters fest
+% \stepcounter{countername}: Erhöht den Wert des Counters um 1.
+\newcounter{sheetnr}
+\newcounter{exnum}
+
+\newcommand{\exercise}[1]{\section*{Aufgabe \theexnum\stepcounter{exnum}: #1}}
+
+\newcommand{\mbeq}{\overset{!}{=}}
+\newcommand{\probgets}{\overset{\$}{\gets}}
+
+\renewcommand{\autodot}{}
+\renewcommand{\thesubsection}{(\alph{subsection})}
+
+\renewcommand{\theenumi}{\textbf{\arabic{enumi}.}}
+
+\newenvironment{proposition}[1][]{\par\noindent\textit{Proposition}\ifx&#1&\else\ (#1)\fi. }
+
+\ohead{
+    Bj\"orn Aheimer 3594348 st177191@stud.uni-stuttgart.de \\ 
+    Felix R\"ohr 3567731 st176436@stud.uni-stuttgart.de \\
+    Aleksis Vezenkov 3607798 st179084@stud.uni-stuttgart.de}
+    
+% \chead{} kann mittleren Kopfzeilen Teil sezten
+% \ihead: Setzt linken Teil der Kopfzeile mit
+% Modulnamen, Semester und Übungsblattnummer
+\ihead{Module Name\\
+WS 2023/24\\
+Homework \thesheetnr}

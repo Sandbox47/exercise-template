@@ -1,88 +1,46 @@
 import os
-import shutil
+import json
 
-################## CONFIG ##################
-# If you change the name of the script please change the value of nameOfScript to match the full name.
-nameOfScript = "CreateNewSheet.py"
-pdfNamePrefix = "Sheet"
-pdfNameSuffix = "_Name"
-sheetDirPrefix = "Sheet"
-############################################
+# Load config
+with open("Config.json", "r") as f:
+    config = json.load(f)
 
-def getNameOfPDF(sheetNumber: int) -> str:
-    return pdfNamePrefix + str(sheetNumber) + pdfNameSuffix
+prefix = config.get("prefix", "Prefix")
+suffix = config.get("suffix", "Suffix")
+sheet = config.get("sheet", "Sheet")
 
-def commitAndPush(path: str) -> None:
-    os.system("git add .")
-    os.system(f"git commit -m \"Initial commit for {path}\"")
-    os.system("git push")
+# Find next Sheet<Nr> folder
+existing_folders = [d for d in os.listdir() if os.path.isdir(d) and d.startswith("Sheet")]
+sheet_numbers = [int(d[5:]) for d in existing_folders if d[5:].isdigit()]
+next_nr = max(sheet_numbers, default=-1) + 1
 
-def getAbsolutePathOfScript() -> str: 
-    scriptAbsPath = __file__
-    lenOfScriptName = (-len(nameOfScript))
-    scriptAbsPath = scriptAbsPath[:lenOfScriptName]
-    return scriptAbsPath
+sheet_folder = f"{sheet}{next_nr}"
+os.makedirs(sheet_folder, exist_ok=True)
 
-def getNextSheetNumber() -> int: 
-    sheetNumber = 1
-    for i in range(1, 20):
-        path = sheetDirPrefix + str(i)
-        sheetNumber = os.listdir().count(path) + sheetNumber
-    return sheetNumber
+# Create .tex file
+filename = f"{prefix}_{sheet}{next_nr}_{suffix}.tex"
+filepath = os.path.join(sheet_folder, filename)
 
-def renameFile(old_name, new_name) -> None:
-    try:
-        os.rename(old_name, new_name)
-        print(f"File {old_name} renamed to {new_name} successfully.")
-    except FileNotFoundError:
-        print(f"Error: File {old_name} not found.")
-    except Exception as e:
-        print(f"An error occurred: {e}")
+latex_template = f"""\\documentclass[12pt]{{scrartcl}}
 
-def copyFile(source: str, destination: str) -> None:
-    try:
-        # Copy the file to the destination
-        shutil.copy(source, destination)
-        print(f"File '{source}' copied to '{destination}' successfully.")
-    except FileNotFoundError:
-        print("Source file not found.")
-    except PermissionError:
-        print("Permission denied to copy the file.")
-    except Exception as e:
-        print(f"An error occurred: {e}")
-    return
+\\input{{../LatexTemplate/Packages.tex}} 
+\\input{{../LatexTemplate/FormatAndHeader.tex}}
 
-def createNewSheetDir(sheetNumber: int) -> str:
-    newSheetDir = sheetDirPrefix + str(sheetNumber)
-    os.mkdir(newSheetDir)
-    return newSheetDir
+% \\stepcounter{{counter}} increases the number of the counter with one. Use this if you need to skip an exercise.
+\\setcounter{{sheetnr}}{{{next_nr}}} 
+\\setcounter{{exnum}}{{1}} 
 
-def getPath(dirs: list[str]) -> str: 
-    return os.sep.join(dirs)
+\\begin{{document}}
 
-def copyTemplate(dst: str, sheetNumber:int) -> None:
-    pathStyles = getPath([dst ,"styles"])
-    pathFigures = getPath([dst, "figures"])
-
-    os.mkdir(pathStyles)
-    os.mkdir(pathFigures)
-    
-    copyFile(getPath(["LatexTemplate","styles","Packages.tex"]), pathStyles)
-    copyFile(getPath(["LatexTemplate","styles","FormatAndHeader.tex"]), pathStyles)
-
-    copyFile(getPath(["LaTeXTemplate","template.tex"]), getPath([dst]))
-    renameFile(getPath([dst,"template.tex"]), getPath([dst, getNameOfPDF(sheetNumber) + ".tex"]))
-    return
+\\exercise{{Example exercise}}
 
 
-os.chdir(getAbsolutePathOfScript())
-os.system("git pull")
 
-newSheetNumber = getNextSheetNumber()
-newSheetDir = createNewSheetDir(newSheetNumber)
-copyTemplate(newSheetDir, newSheetNumber)
 
-done = input("Do you want to commit and push all changes so far? (y/n): ")
-if (done == "y"):
-    commitAndPush(newSheetDir)
-done = input("Done! Press any key to exit")
+\\end{{document}}
+"""
+
+with open(filepath, "w") as f:
+    f.write(latex_template)
+
+print(f"Created: {filepath}")
